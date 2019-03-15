@@ -28,9 +28,9 @@ class Filter:
                         self.list_of_lines[cur_index].append_to_par(text[i])
 
         # removing the title and footer lines
-        for i in range(3):
-            del self.list_of_lines[0]
-        self.list_of_lines.pop()
+        # for i in range(3):
+        #     del self.list_of_lines[0]
+        # self.list_of_lines.pop()
         
 
 
@@ -160,9 +160,7 @@ class Interpreter:
         self.collect_img_pool(line)
         self.remove_nbsp(line)
 
-        # print("linum ", self.list_of_lines.index(line), ": ", line.get_par())
         self.collect_stncs(line)
-        # print("the end of it all:", line.get_sentences())
         self.style_parse(line)        
         
 
@@ -187,6 +185,7 @@ class Interpreter:
         #takes <img> contents, sends to checkbox analysis, removes from the paragraph
         appending = False
         img_pool = ""
+        index_pos = -1
         for index, char in enumerate(line.get_par()):
             if line.get_par()[index:index+4] == "<IMG":
                 appending = True
@@ -194,9 +193,10 @@ class Interpreter:
                 img_pool += char
                 if char == ">": # if we hit the end of img
                     appending = False
+                    index_pos = index
                     break
         # removing <img> from the paragraph
-        line.set_par(line.get_par()[index+1:])
+        line.set_par(line.get_par()[index_pos+1:])
             
     def remove_nbsp(self, line):
         # removes all line-objects whose paragraph is "nbsp"
@@ -227,6 +227,56 @@ class Interpreter:
         # collects all sentences and linkspp
 
         #uses recursion
+        def iterative_collect(paragraph):
+            # until there's something left -
+            new_paragraph = paragraph
+            list_of_sents = []
+            new_string = ''
+            cut_prematurely = False
+            while new_paragraph != '':
+                if new_paragraph[0:2] == "<A":
+                    for index, char in enumerate(new_paragraph):
+                        if new_paragraph[index-2:index] == "/A>":
+                            cut_prematurely = True
+                            index_pos = index
+                            break
+                        new_string += char
+                    # convert the string to a link object
+                    new_string = Link(new_string)
+                elif new_paragraph[0:5] == "<SPAN":
+                    # UNFINISHED, i haven't implemented bold yet
+                    # find > and append till </SPAN
+                    for i in range(len(new_paragraph)):
+                        if new_paragraph[i] == '>':
+                            for j in range(i+1, len(new_paragraph)):
+                                if new_paragraph[j] == '<':
+                                    break
+                                new_string += new_paragraph[j]
+                            break
+                        
+                    # find the end of </span> and cut it there
+                    for index, char in enumerate(new_paragraph):
+                        if new_paragraph[index-7:index] == "</SPAN>":
+                            cut_prematurely = True
+                            index_pos = index
+                            break
+                
+                else:
+                    for index, char in enumerate(new_paragraph):
+                        if char == '<':
+                            cut_prematurely = True
+                            index_pos = index
+                            break
+                        new_string += char
+                list_of_sents.append(new_string)
+                if cut_prematurely:
+                    new_string = ''
+                    cut_prematurely = False
+                    new_paragraph = new_paragraph[index_pos:]
+                else:
+                    new_paragraph = ''
+            return list_of_sents
+                
         def recursive_collect(paragraph):
             # new string that will be added to the list of sents along with others
             new_string = ""
@@ -250,23 +300,19 @@ class Interpreter:
                     # breaks if hits a link
             
             # if the end: returns just a string, if not - extends with output from the next function call
-            # print("the new string atm: ", new_string)
             list_of_sents = []
             list_of_sents.append(new_string)
             # if we cut prematurely - means there's something else left
             if cut_prematurely:
                 cut_paragraph = paragraph[index:]
-                # print("the cut paragraph:", cut_paragraph)
                 
                 list_of_sents.extend(recursive_collect(cut_paragraph))
-                # print("the list at the moment: ", list_of_sents)
                 return list_of_sents
             else:
-                # print("we hit the end")
                 return list_of_sents
 
 
-        line.set_sentences(recursive_collect(line.get_par()))
+        line.set_sentences(iterative_collect(line.get_par()))
 
             
             
@@ -277,15 +323,14 @@ class Interpreter:
     # final parses
     def style_parse(self, line):
         # takes an initial style pool, takes margin and one of 3 highlights and converts them to the object
-        #print("ehhh", line.style_pool)
-
         def determine_margin(pool):
             # find margin in text and look for the fourth number OR if hits ; - count as 0
-            margin = ""
+            margin = "0"
             count = 0
             for index, elem in enumerate(pool):
                 if pool[index:index+6] == "MARGIN":
                     # once margin is found - start iterating pool from there
+                    margin = ''
                     for i in range(index, len(pool)):
                         # count numbers until count to 3 and record the next one
                         # if hits ; - break and
@@ -293,13 +338,11 @@ class Interpreter:
                             margin += pool[i]
                         if (pool[i] in string.digits) and (pool[i-1] not in string.digits) and count < 3:
                             count += 1
-                            # print("count atm: ", count, "margin: ", margin)
                         if pool[i] == ';':
                             break
                     if count < 3:
                         margin = '0'
                     break
-            # print("margin: ", margin, " count: ", count)
             return margin
             
 
@@ -399,7 +442,7 @@ class Exporter:
                 self.text += '+'
         
         # put hierarchy
-        if line.sentences[0]:
+        if line.sentences and line.sentences[0]:
             for i in range(line.hierarchy+1):
                 self.text += '*'
             self.text += ' '
@@ -423,14 +466,16 @@ class Exporter:
 
 
 def main():
-    filename_import = "onenoteToOrg/JavaScript2.htm"
-    filename_export = "Javascript.org"
+    filename_import = "sources/current/Tasks.html"
+    filename_export = "sources/current/Tasks.org"
     
     
     myFilter = Filter(filename_import)
     # gets the text (p tags) from the filter and passes to the interpreter
     Interpreter(myFilter.list_of_lines)
     Exporter(myFilter.list_of_lines, filename_export)
+
+    print("Success!")
     
 
 if __name__ == "__main__":
