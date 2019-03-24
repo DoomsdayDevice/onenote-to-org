@@ -1,4 +1,6 @@
 import string
+import sys
+import os
 
 
 class Importer:
@@ -11,21 +13,36 @@ class Importer:
         
         self.import_file = ""
         self.export_file = ""
-        self.config()
-        print("IMP:", self.import_file, " EXP:", self.export_file)
-        self.initial_cut()
+        self.export_folder = ""
+        self.list_of_files = []
+
         
-    def initial_cut(self):
-        with open(self.import_file, 'r') as fobj:
+        self.read_args()
+        for html_file in self.list_of_files:
+            self.import_file = html_file
+            filename = self.find_filename(self.import_file)
+            filename = self.replace_html_with_org(filename)
+            self.export_file = self.export_folder + filename
+
+            self.list_of_lines = self.initial_cut(self.import_file)
+            self.send_stuff_further(self.list_of_lines, self.export_file)
+            
+        # self.config()
+        print("IMP:", self.import_file, " EXP:", self.export_file)
+        
+    @staticmethod
+    def initial_cut(import_file):
+        with open(import_file, 'r') as fobj:
             text = fobj.read()
             cur_index = 0
             append = False
+            list_of_lines = []
             for i in range(len(text)):
                 if not append:
                     if text[i] == "<" and text[i+1] == "P":
                         append = True
                         # creating a new Line object and sending it the first character
-                        self.list_of_lines.append(Line(text[i]))
+                        list_of_lines.append(Line(text[i]))
                     else:
                         pass
                 else:
@@ -33,9 +50,45 @@ class Importer:
                         append = False
                         cur_index += 1
                     else:
-                        self.list_of_lines[cur_index].append_to_par(text[i])
+                         list_of_lines[cur_index].append_to_par(text[i])
+        return list_of_lines
+    
+    def read_args(self):
+        print("import:", sys.argv[1], "Exp. folder:", sys.argv[2])
+        self.import_file = sys.argv[1]
+        self.export_folder = sys.argv[-1] # the last argument is the export folder
 
-    def config(self):
+        # take the name of the file and append to export
+        for index, file_path in enumerate(sys.argv[1:-2]): # check if it's an html file
+            if file_path[-4:] == "html" or file_path[-3:] == "htm":
+                self.list_of_files.append(file_path)
+        print("the list:", self.list_of_files)
+            
+    
+    @staticmethod
+    def find_filename(filename):
+        # finds the filename given a full path
+        # find the last slash, if none - just copy
+        slash_index = 0
+        for index, char in enumerate(filename):
+            if char == '/':
+                slash_index = index + 1
+        return filename [slash_index:]
+
+    @staticmethod
+    def replace_html_with_org(filename):
+        if filename[-4:] == "html":
+            return filename[:-4] + "org"
+        elif filename[-3:] == "htm":
+            return filename[:-3] + "org"
+    
+    @staticmethod
+    def send_stuff_further(list_of_lines, export_file):
+        Interpreter(list_of_lines)
+        Exporter(list_of_lines, export_file)
+
+    
+    def config(self): 
         block_id = "[converter]"
         def import_config():
             with open("config", 'r') as fobj:
@@ -521,8 +574,6 @@ class Exporter:
 def main():
     myImporter = Importer()
     # gets the text (p tags) from the filter and passes to the interpreter
-    Interpreter(myImporter.list_of_lines)
-    Exporter(myImporter.list_of_lines, myImporter.export_file)
 
     print("Success!")
     
