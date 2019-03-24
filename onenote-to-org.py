@@ -1,14 +1,22 @@
 import string
 
 
-class Filter:
+class Importer:
     """ class that imports the html file and removes everything but p 
     two modes: append, skip """
 
-    def __init__(self, filename):
+    def __init__(self):
         # import file and append each paragraph to a list of strings
         self.list_of_lines = []
-        with open(filename, 'r') as fobj:
+        
+        self.import_file = ""
+        self.export_file = ""
+        self.config()
+        print("IMP:", self.import_file, " EXP:", self.export_file)
+        self.initial_cut()
+        
+    def initial_cut(self):
+        with open(self.import_file, 'r') as fobj:
             text = fobj.read()
             cur_index = 0
             append = False
@@ -27,11 +35,56 @@ class Filter:
                     else:
                         self.list_of_lines[cur_index].append_to_par(text[i])
 
-        # removing the title and footer lines
-        # for i in range(3):
-        #     del self.list_of_lines[0]
-        # self.list_of_lines.pop()
+    def config(self):
+        block_id = "[converter]"
+        def import_config():
+            with open("config", 'r') as fobj:
+                return fobj.read()
+        def find_block(text, block_id):
+            # looking for block start
+            for i in range(len(text)):
+                if text[i:i+len(block_id)] == block_id:
+                    block_start = i+len(block_id)
+                    break
+            # looking for block end
+            for i in range(block_start, len(text)):
+                if text[i] == '[':
+                    block_end = i-1
+                    break
+                block_end = i
+            return (block_start, block_end)
+
+        def find_source(text, BS, BE):
+            # finding source
+            for i in range(BS, BE):
+                if text[i:i+len("source")] == "source":
+                    print("we found source")
+                    source_start = i+len("source")+2
+                    for j in range(source_start, BE):
+                        if text[j] == '"':
+                            source_end = j
+                            break
+                    break
+            return text[source_start:source_end]
         
+        def find_output(text, BS, BE):
+            # finding output
+            for i in range(BS, BE):
+                if text[i:i+len("output")] == "output":
+                    output_start = i + len("output") + 2
+                    for j in range(output_start, BE):
+                        if text[j] == '"':
+                            output_end = j
+                            break
+                    break
+            return text[output_start:output_end]
+                
+        # find source location and attach to object
+
+        text = import_config()
+        block_start, block_end = find_block(text, block_id)
+        self.import_file = find_source(text, block_start, block_end)
+        self.export_file = find_output(text, block_start, block_end)
 
 
 class Line:
@@ -466,14 +519,10 @@ class Exporter:
 
 
 def main():
-    filename_import = "sources/current/Tasks.html"
-    filename_export = "sources/current/Tasks.org"
-    
-    
-    myFilter = Filter(filename_import)
+    myImporter = Importer()
     # gets the text (p tags) from the filter and passes to the interpreter
-    Interpreter(myFilter.list_of_lines)
-    Exporter(myFilter.list_of_lines, filename_export)
+    Interpreter(myImporter.list_of_lines)
+    Exporter(myImporter.list_of_lines, myImporter.export_file)
 
     print("Success!")
     
