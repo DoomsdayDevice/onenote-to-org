@@ -4,19 +4,19 @@ import os
 
 
 class Importer:
-    """ class that imports the html file and removes everything but p 
+    """ class that imports the html file and removes everything but p
     two modes: append, skip """
 
     def __init__(self):
         # import file and append each paragraph to a list of strings
         self.list_of_lines = []
-        
+
         self.import_file = ""
         self.export_file = ""
         self.export_folder = ""
         self.list_of_files = []
 
-        
+
         self.read_args()
         for html_file in self.list_of_files:
             self.import_file = html_file
@@ -26,13 +26,13 @@ class Importer:
 
             self.list_of_lines = self.initial_cut(self.import_file)
             self.send_stuff_further(self.list_of_lines, self.export_file)
-            
+
         # self.config()
         print("IMP:", self.import_file, " EXP:", self.export_file)
-        
+
     @staticmethod
     def initial_cut(import_file):
-        with open(import_file, 'r') as fobj:
+        with open(import_file, 'r', encoding="utf_8") as fobj:
             text = fobj.read()
             cur_index = 0
             append = False
@@ -50,21 +50,34 @@ class Importer:
                         append = False
                         cur_index += 1
                     else:
-                         list_of_lines[cur_index].append_to_par(text[i])
+                        list_of_lines[cur_index].append_to_par(text[i])
         return list_of_lines
-    
+
     def read_args(self):
+        print("the entire sys.argv:", sys.argv)
         print("import:", sys.argv[1], "Exp. folder:", sys.argv[2])
         self.import_file = sys.argv[1]
         self.export_folder = sys.argv[-1] # the last argument is the export folder
 
+
+
+        # create a list of paths
+        list_of_paths = []
+        if len(sys.argv) > 3:
+            print("ERROR: MORE THAN 3 ARGS, GOTTA FINISH THAT CODE MATE")
+        else:
+            new_list = list(os.walk(sys.argv[1]))[0]
+            for i in new_list[2]:
+                list_of_paths.append(new_list[0]+ i)
+
+
         # take the name of the file and append to export
-        for index, file_path in enumerate(sys.argv[1:-2]): # check if it's an html file
+        for index, file_path in enumerate(list_of_paths): # check if it's an html file
             if file_path[-4:] == "html" or file_path[-3:] == "htm":
                 self.list_of_files.append(file_path)
-        print("the list:", self.list_of_files)
-            
-    
+                print("file path:", file_path)
+
+
     @staticmethod
     def find_filename(filename):
         # finds the filename given a full path
@@ -81,14 +94,14 @@ class Importer:
             return filename[:-4] + "org"
         elif filename[-3:] == "htm":
             return filename[:-3] + "org"
-    
+
     @staticmethod
     def send_stuff_further(list_of_lines, export_file):
         Interpreter(list_of_lines)
         Exporter(list_of_lines, export_file)
 
-    
-    def config(self): 
+
+    def config(self):
         block_id = "[converter]"
         def import_config():
             with open("config", 'r') as fobj:
@@ -99,7 +112,7 @@ class Importer:
                 if text[i:i+len(block_id)] == block_id:
                     block_start = i+len(block_id)
                     break
-            # looking for block end
+                # looking for block end
             for i in range(block_start, len(text)):
                 if text[i] == '[':
                     block_end = i-1
@@ -119,7 +132,7 @@ class Importer:
                             break
                     break
             return text[source_start:source_end]
-        
+
         def find_output(text, BS, BE):
             # finding output
             for i in range(BS, BE):
@@ -131,7 +144,7 @@ class Importer:
                             break
                     break
             return text[output_start:output_end]
-                
+
         # find source location and attach to object
 
         text = import_config()
@@ -150,7 +163,7 @@ class Line:
         self.style = ""
     def append_to_par(self, char):
         self.paragraph += char
-    
+
     def get_par(self):
         return self.paragraph
 
@@ -188,7 +201,7 @@ class Link:
         self.url = ""
 
         self.disassemble_pool()
-        
+
     def disassemble_pool(self):
         # print("the pool is ", self.pool)
         # everything from href=" to " goes to url
@@ -200,8 +213,8 @@ class Link:
                     break
             elif self.pool[index-5:index+1] == 'href="':
                 appending = True
-        # print("the url is: ", self.url)
-        
+                # print("the url is: ", self.url)
+
         appending = False
         # everything after > and before < goes to description
         for index, char in enumerate(self.pool):
@@ -211,9 +224,9 @@ class Link:
                     break
             elif self.pool[index] == '>':
                 appending = True
-        # print("the descritption is: ", self.description)
-            
-        
+                # print("the descritption is: ", self.description)
+
+
 class Interpreter:
     def __init__(self, list_of_lines):
         # list of all the line objects
@@ -221,7 +234,7 @@ class Interpreter:
         self.list_of_lines = list_of_lines
         self.hierarchy_map = ["0"]
         self.hierarchy_mapper()
-        
+
         for line in self.list_of_lines:
             self.parse(line)
 
@@ -233,12 +246,12 @@ class Interpreter:
         mylist = self.list_of_lines
         for index, line in enumerate(mylist):
             # look for margin, then count to 3 and on 4th append the number
-            # 
+            #
             for index, char in enumerate(line.get_par()):
                 if line.get_par()[index:index+7] == "MARGIN:":
                     # now start counting numbers and when get to 4th - record it, if hit " or ; early - break
                     for i in range(index, len(line.get_par())):
-                        
+
                         if line.get_par()[i] in string.digits and (line.get_par()[i - 1] not in string.digits) and counter < 4:
                             counter += 1
                             # print("countin")
@@ -249,17 +262,17 @@ class Interpreter:
                             # print("the num is: ", number)
                             if number not in self.hierarchy_map and number != "":
                                 self.hierarchy_map.append(number)
-                            number = ""
-                            counter = 0
+                                number = ""
+                                counter = 0
                             break
-        # sorting the resulting map
+                        # sorting the resulting map
         self.hierarchy_map.sort()
         print("the hierarchy map is:", self.hierarchy_map)
 
     def parse(self, line):
         # initial parsing that puts full style, img, <a>, tags inside their own strings
         # takes a line, breaks it into sub-strings and attaches those to corresponding line objects
-        
+
         # iterate through the list, two vars: pointer and mode
         # get the style first, then img if it exists, then text inside <p>
         self.collect_style_pool(line)
@@ -267,8 +280,8 @@ class Interpreter:
         self.remove_nbsp(line)
 
         self.collect_stncs(line)
-        self.style_parse(line)        
-        
+        self.style_parse(line)
+
 
     def collect_style_pool(self, line):
         # loop for style; copy all style into its own string, cut the line at >
@@ -285,7 +298,7 @@ class Interpreter:
                 # removing the the <p> and </p> tags and what's inside, then breaking out of the loop
                 line.set_par(line.get_par()[index+1:-4])
                 break
-        line.set_style_pool(style_pool)
+            line.set_style_pool(style_pool)
 
     def collect_img_pool(self, line):
         #takes <img> contents, sends to checkbox analysis, removes from the paragraph
@@ -301,9 +314,9 @@ class Interpreter:
                     appending = False
                     index_pos = index
                     break
-        # removing <img> from the paragraph
+                # removing <img> from the paragraph
         line.set_par(line.get_par()[index_pos+1:])
-            
+
     def remove_nbsp(self, line):
         # removes all line-objects whose paragraph is "nbsp"
         # takes paragraph and removes all the instances of "&nbsp"
@@ -323,12 +336,12 @@ class Interpreter:
                 counter -= 1
             if appending:
                 new_paragraph += line.get_par()[i]
-        
+
         # removing newlines
         new_paragraph = new_paragraph.replace('\n  ', '')
         line.set_par(new_paragraph)
-    
-        
+
+
     def collect_stncs(self, line):
         # collects all sentences and linkspp
 
@@ -347,7 +360,7 @@ class Interpreter:
                             index_pos = index
                             break
                         new_string += char
-                    # convert the string to a link object
+                        # convert the string to a link object
                     new_string = Link(new_string)
                 elif new_paragraph[0:5] == "<SPAN":
                     # UNFINISHED, i haven't implemented bold yet
@@ -359,14 +372,14 @@ class Interpreter:
                                     break
                                 new_string += new_paragraph[j]
                             break
-                        
+
                     # find the end of </span> and cut it there
                     for index, char in enumerate(new_paragraph):
                         if new_paragraph[index-7:index] == "</SPAN>":
                             cut_prematurely = True
                             index_pos = index
                             break
-                
+
                 else:
                     for index, char in enumerate(new_paragraph):
                         if char == '<':
@@ -374,7 +387,7 @@ class Interpreter:
                             index_pos = index
                             break
                         new_string += char
-                list_of_sents.append(new_string)
+                        list_of_sents.append(new_string)
                 if cut_prematurely:
                     new_string = ''
                     cut_prematurely = False
@@ -382,7 +395,7 @@ class Interpreter:
                 else:
                     new_paragraph = ''
             return list_of_sents
-                
+
         def recursive_collect(paragraph):
             # new string that will be added to the list of sents along with others
             new_string = ""
@@ -395,7 +408,7 @@ class Interpreter:
                         cut_prematurely = True
                         break
                     new_string += char
-                # convert the string to a link object
+                    # convert the string to a link object
                 new_string = Link(new_string)
             else:
                 for index, char in enumerate(paragraph):
@@ -404,14 +417,14 @@ class Interpreter:
                         break
                     new_string += char
                     # breaks if hits a link
-            
+
             # if the end: returns just a string, if not - extends with output from the next function call
             list_of_sents = []
             list_of_sents.append(new_string)
             # if we cut prematurely - means there's something else left
             if cut_prematurely:
                 cut_paragraph = paragraph[index:]
-                
+
                 list_of_sents.extend(recursive_collect(cut_paragraph))
                 return list_of_sents
             else:
@@ -420,10 +433,10 @@ class Interpreter:
 
         line.set_sentences(iterative_collect(line.get_par()))
 
-            
-            
-        
-    
+
+
+
+
 
 
     # final parses
@@ -450,7 +463,7 @@ class Interpreter:
                         margin = '0'
                     break
             return margin
-            
+
 
         def determine_style(pool):
             background = ""
@@ -464,10 +477,10 @@ class Interpreter:
                 if appending:
                     if pool[i+1] == ';':
                         appending = False
-                    background += pool[i]
-                i += 1
+                        background += pool[i]
+                        i += 1
 
-            
+
             # look for COLOR
             color = ""
             i = 0
@@ -479,37 +492,37 @@ class Interpreter:
                 if appending:
                     if pool[i+1] == ';':
                         appending = False
-                    color += pool[i]
-                i += 1
-            
+                        color += pool[i]
+                        i += 1
+
             if background == "#00ccff":
                 return "special"
-            
+
             elif color == "#ff99cc":
                 return "uncertain"
-            
+
             elif background == "lime":
                 return "important"
-            
+
             elif False:
                 # UNFINISHED finish this later
                 return "bold"
-            
+
             else:
                 return ""
-        
+
 
         # setting the position in the hierarchy based in the margin
         line.set_hierarchy(self.hierarchy_map.index(determine_margin(line.style_pool)))
         line.set_style(determine_style(line.style_pool))
-        
+
 
     def checkbox_parse(self):
         # takes the initial <img> pool and interprets it into the checkbox value
-                
+
         # loop for img; impossible to ID right now, because the image name is diff every time
         # gotta analyze the image itself
-        
+
         # checkbox_id = "mht97B(1).tmp"
         # for index, char in enumerate(line.get_par()):
         #     if line.get_par()[index:index+4] == "<IMG":
@@ -526,7 +539,7 @@ class Interpreter:
 
 class Exporter:
     # takes the list of lines and prints them to a txt file
-    
+
     def __init__(self, the_list, filename):
         self.the_list = the_list
         self.text = ""
@@ -539,19 +552,19 @@ class Exporter:
         def put_style():
             nonlocal line
             nonlocal self
-            
+
             if line.style == "important":
                 self.text += '!'
             elif line.style == "uncertain":
                 self.text += '~'
             elif line.style == "special":
                 self.text += '+'
-        
+
         # put hierarchy
         if line.sentences and line.sentences[0]:
             for i in range(line.hierarchy+1):
                 self.text += '*'
-            self.text += ' '
+                self.text += ' '
 
         # UNFINISHED depending on checkbox value - put a todo value
 
@@ -562,13 +575,13 @@ class Exporter:
                 self.text += '[[' + elem.url + '][' + elem.description + ']]'
             else:
                 self.text += elem
-        put_style()
-        self.text += '\n'
+                put_style()
+                self.text += '\n'
 
     def export(self, filename):
-        with open(filename, 'w') as fobj:
+        with open(filename, 'w', encoding="utf_8") as fobj:
             print(self.text, file=fobj)
-        
+
 
 
 def main():
@@ -576,7 +589,7 @@ def main():
     # gets the text (p tags) from the filter and passes to the interpreter
 
     print("Success!")
-    
+
 
 if __name__ == "__main__":
     main()

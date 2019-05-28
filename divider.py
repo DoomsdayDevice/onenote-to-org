@@ -8,9 +8,9 @@ class Importer:
         self.output_folder = "divider_output"
         
         self.read_config()
-        # self.import_text()
+        self.import_text()
         # cut, put into Exporter
-        # self.cutter()
+        self.cutter()
         
 
 
@@ -75,11 +75,13 @@ class Importer:
         beginning = 0
         end = 0
         while index < len(self.text):
+            print("heeh")
             if self.text[index:index+len(divider)] == divider:
                 if beginning == 0:
                     beginning = index
                 else:
                     end = index
+                    print("exportan")
                     Exporter(self.text[beginning:end], self.output_folder)
                     beginning = end
             index += 1
@@ -87,9 +89,11 @@ class Importer:
 class Exporter:
     previous_name = "Originallio"
     current_file = 1
-    
+
+	
     # looks for name
     def __init__(self, text, output_folder):
+        print(text)
         self.text = text
         self.output_folder = output_folder
         

@@ -3,5 +3,5 @@ source="divided-this-shit/To import/303 PHP.html"
 output="divided-this-shit/orgs/PHP.org"
 
 [divider]
-source="sources/# HTMLS/the book/The Book.htm"
-output="divided-this-shit"
+source="product/import/projects.htm"
+output="product/toConvert"
