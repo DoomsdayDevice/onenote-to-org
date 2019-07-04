@@ -1,17 +1,18 @@
-import string
+"""in case of a many-page html export file (if the entire notebook or section is exported) - divides them into pages"""
 
+import string
 
 class Importer:
 
     def __init__(self):
         self.source = ""
         self.output_folder = "divider_output"
-        
+
         self.read_config()
         self.import_text()
         # cut, put into Exporter
         self.cutter()
-        
+
 
 
     def read_config(self):
@@ -27,14 +28,14 @@ class Importer:
                     if text[i:i+len(block_id)] == block_id:
                         block_start = i+len(block_id)
                         break
-                # looking for block end
+                    # looking for block end
                 for i in range(block_start, len(text)):
                     if text[i] == '[':
                         block_end = i-1
                         break
                     block_end = i
                 return (block_start, block_end)
-            
+
             block_start, block_end = find_block(text, block_id)
 
             index = block_start
@@ -43,7 +44,7 @@ class Importer:
                 if appending:
                     if text[index+1] == '"':
                         appending = False
-                    exec(pointer + " += char")
+                        exec(pointer + " += char")
                 if text[index:index+7] == "source=" and text[index+9] != '"':
                     pointer = "self.source"
                     self.source = ""
@@ -54,11 +55,11 @@ class Importer:
                     self.output_folder = ""
                     appending = True
                     index = index + 7
-                index += 1
-            print("source:", self.source)
-            print("output folder:", self.output_folder)
+                    index += 1
+                    print("source:", self.source)
+                    print("output folder:", self.output_folder)
 
-    
+
     def import_text(self):
         with open(self.source, 'r') as fobj:
             self.text = fobj.read()
@@ -84,19 +85,19 @@ class Importer:
                     print("exportan")
                     Exporter(self.text[beginning:end], self.output_folder)
                     beginning = end
-            index += 1
+                    index += 1
 
 class Exporter:
     previous_name = "Originallio"
     current_file = 1
 
-	
+    
     # looks for name
     def __init__(self, text, output_folder):
         print(text)
         self.text = text
         self.output_folder = output_folder
-        
+
         self.name_lookup()
         if self.appendage:
             self.export_text_append()
@@ -104,20 +105,20 @@ class Exporter:
             self.export_text()
 
     def export_text(self):
-        filename = self.output_folder + "/" + str(Exporter.current_file) + ' ' + self.name + ".html" 
+        filename = self.output_folder + "/" + str(Exporter.current_file) + ' ' + self.name + ".html"
         Exporter.previous_name = filename
         with open(filename , "w") as fobj:
             print(self.text, file=fobj)
-        Exporter.current_file += 1
+            Exporter.current_file += 1
     def export_text_append(self):
         filename = Exporter.previous_name
         # logging which file has been appended where
         with open(self.output_folder + '/' + "#-appendage-logs.txt", 'w') as fobj:
             print("appended to :", Exporter.previous_name, file=fobj)
-        # appending
+            # appending
         with open(filename, 'a') as fobj:
             print(self.text, file=fobj)
-                        
+
     def name_lookup(self):
         # if the first P doesn't have Calibri light - use the static name
         def look_for_first_par():
@@ -141,11 +142,11 @@ class Exporter:
                     if char == '/':
                         new_name += ':'
                     elif char == "\n":
-                        continue                    
+                        continue
                     else:
                         new_name += char
                 return new_name
-                        
+
             start = 0
             end = 0
             for i in range(len(paragraph)):
@@ -156,8 +157,8 @@ class Exporter:
                             end = j
                             break
                     break
-            name = paragraph[start: end]
-            name = get_rid_of_chars(name)
+                name = paragraph[start: end]
+                name = get_rid_of_chars(name)
             return name
 
         def has_calibri(paragraph):
@@ -165,17 +166,17 @@ class Exporter:
             for i in range(len(paragraph)):
                 if paragraph[i:i+len(string)] == string:
                     return True
-        # if cannot find the headline - use the static var, previous name
+                # if cannot find the headline - use the static var, previous name
         paragraph = look_for_first_par()
-        
+
         if has_calibri(paragraph):
             self.appendage = False
             self.name = get_name(paragraph)
         else:
             self.appendage = True
-                
-        
-        
+
+
+
 
 def main():
     Importer()
