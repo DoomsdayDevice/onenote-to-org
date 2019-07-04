@@ -4,10 +4,10 @@ import os
 
 from oto import divider
 from oto import utils
-from oto.Line import Line
-from oto.Link import Link
-from oto.Interpreter import Interpreter
-from oto.Exporter import Exporter
+from oto.line import Line
+from oto.link import Link
+from oto.interpreter import Interpreter
+from oto.exporter import Exporter
 
 print(Line.ehh())
 
