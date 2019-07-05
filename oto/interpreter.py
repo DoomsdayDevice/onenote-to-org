@@ -1,4 +1,6 @@
 import string
+from . import utils
+from .link import Link
 
 class Interpreter:
     def __init__(self, list_of_lines):
@@ -27,12 +29,9 @@ class Interpreter:
 
                         if line.get_par()[i] in string.digits and (line.get_par()[i - 1] not in string.digits) and counter < 4:
                             counter += 1
-                            # print("countin")
                         if counter == 4 and (line.get_par()[i] in string.digits or line.get_par()[i] == "."):
                             number += line.get_par()[i]
                         if line.get_par()[i] in [';', '"']:
-                            # print("we found the sole zero or the end of the line, the char is:", line[i])
-                            # print("the num is: ", number)
                             if number not in self.hierarchy_map and number != "":
                                 self.hierarchy_map.append(number)
                                 number = ""
@@ -239,34 +238,15 @@ class Interpreter:
 
 
         def determine_style(pool):
-            background = ""
-            # look for background attach everything until ;
-            appending = False
-            i = 0
-            while i < len(pool):
-                if pool[i:i+12] == "BACKGROUND: ":
-                    appending = True
-                    i += 12
-                if appending:
-                    if pool[i+1] == ';':
-                        appending = False
-                        background += pool[i]
-                        i += 1
-
+            # if contains bg - start appending until hit ;
+            # appends everything excent "background"
+            background = utils.copy_everything_from_except(pool, "BACKGROUND: ", ';')
 
             # look for COLOR
             color = ""
             i = 0
             appending = False
-            while i < len(pool):
-                if pool[i:i+7] == "COLOR: ":
-                    appending = True
-                    i += 7
-                if appending:
-                    if pool[i+1] == ';':
-                        appending = False
-                        color += pool[i]
-                        i += 1
+            color = utils.copy_everything_from_except(pool, "COLOR: ", ';')
 
             if background == "#00ccff":
                 return "special"
@@ -285,7 +265,7 @@ class Interpreter:
                 return ""
 
 
-        # setting the position in the hierarchy based in the margin
+        # setting the position in the hierarchy based on the margin
         line.set_hierarchy(self.hierarchy_map.index(determine_margin(line.style_pool)))
         line.set_style(determine_style(line.style_pool))
 
@@ -302,7 +282,6 @@ class Interpreter:
         #         line.set_checkbox("unchecked")
         #         for i in range(index, len(line.get_par())):
         #             if line.get_par()[i:i+len(checkbox_id)+1] == checkbox_id:
-        #                 print("we found the img")
         #                 line.set_checkbox("checked")
         #                 break
         #             print(line.get_par()[i:i+len(checkbox_id)+1])

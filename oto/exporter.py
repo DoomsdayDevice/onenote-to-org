@@ -1,3 +1,4 @@
+from .link import Link
 class Exporter:
     # takes the list of lines and prints them to a txt file
 
