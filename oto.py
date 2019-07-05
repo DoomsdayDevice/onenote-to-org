@@ -1,4 +1,3 @@
-import string
 import sys
 import os
 
@@ -8,8 +7,6 @@ from oto.line import Line
 from oto.link import Link
 from oto.interpreter import Interpreter
 from oto.exporter import Exporter
-
-print(Line.ehh())
 
 class Importer:
     """ class that imports the html file and removes everything but p
@@ -68,11 +65,16 @@ class Importer:
         self.export_folder = sys.argv[-1] # the last argument is the export folder
 
 
-
+        print("THE NEW LIST: ", list(os.walk(sys.argv[1])))
+        if ".htm" in sys.argv[1]:
+            self.list_of_files.append(sys.argv[1])
+        else:
+            self.read_args_folder()
         # create a list of paths
+    def read_args_folder(self):
         list_of_paths = []
         if len(sys.argv) > 3:
-            print("ERROR: MORE THAN 3 ARGS, GOTTA FINISH THAT CODE MATE")
+            print("ERROR: MORE THAN 3 ARGS")
         else:
             new_list = list(os.walk(sys.argv[1]))[0]
             for i in new_list[2]:

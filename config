@@ -1,7 +1,7 @@
 [converter]
-source="divided-this-shit/To import/303 PHP.html"
-output="divided-this-shit/orgs/PHP.org"
+input="input"
+output="output"
 
 [divider]
-source="product/import/projects.htm"
-output="product/toConvert"
+input="input"
+output="output"

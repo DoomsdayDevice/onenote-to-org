@@ -1,3 +1,5 @@
+import string
+
 class Interpreter:
     def __init__(self, list_of_lines):
         # list of all the line objects
