@@ -1,10 +1,22 @@
 from oto import divider
 from oto.importer import Importer
 
+from oto.interpreter import Interpreter
+from oto.exporter import Exporter
+from oto.config import read_config
+
 
 def main():
+    config = read_config('./config')
+    assert false
     myImporter = Importer()
-    # gets the text (p tags) from the filter and passes to the interpreter
+
+    # gets lines (p tags and other data) from each imported file
+    # passes it to Interpreter to parse and change each line
+    # and then to Exporter to print that line
+    for imported_file in myImporter.get_files():
+        Interpreter(imported_file)
+        Exporter(imported_file, myImporter.export_filename)
 
     print("Success!")
 

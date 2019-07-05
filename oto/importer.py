@@ -5,42 +5,43 @@ from oto import utils
 from oto.line import Line
 from oto.link import Link
 
-from oto.interpreter import Interpreter
-from oto.exporter import Exporter
-
 class Importer:
     """ Imports the html file and removes everything but <p> tags
     two modes: append, skip """
 
     def __init__(self):
-        """import file and append each paragraph to a list of strings"""
+        """ import file and append each paragraph to a list of strings """
         self.list_of_lines = []
 
         self.import_file = ""
-        self.export_file = ""
+        self.export_filename = ""
         self.export_folder = ""
         self.list_of_files = []
 
 
         self.read_args()
+        self.list_of_imported_files = []
         for html_file in self.list_of_files:
             self.import_file = html_file
             filename = self.find_filename(self.import_file)
             filename = self.replace_html_with_org(filename)
-            self.export_file = self.export_folder + filename
+            self.export_filename = self.export_folder + filename
 
             self.list_of_lines = self.initial_cut(self.import_file)
             # for line in self.list_of_lines:
             #     print(line.paragraph)
-            Interpreter(self.list_of_lines)
-            Exporter(self.list_of_lines, self.export_file)
+            # Interpreter(self.list_of_lines)
+            self.list_of_imported_files.append(self.list_of_lines)
 
         # self.config()
-        print("IMP:", self.import_file, " EXP:", self.export_file)
+        print("IMP:", self.import_file, " EXP:", self.export_filename)
+
+    def get_files(self):
+        return self.list_of_imported_files
 
     @staticmethod
     def initial_cut(import_file):
-        """takes the initial document and breaks into manageable pieces"""
+        """ takes the initial document and breaks into manageable pieces """
         with open(import_file, 'r', encoding="utf_8") as fobj:
             text = fobj.read()
             cur_index = 0
@@ -108,52 +109,3 @@ class Importer:
         elif filename[-3:] == "htm":
             return filename[:-3] + "org"
 
-    def config(self):
-        block_id = "[converter]"
-        def import_config():
-            with open("config", 'r') as fobj:
-                return fobj.read()
-        def find_block(text, block_id):
-            # looking for block start
-            for i in range(len(text)):
-                if text[i:i+len(block_id)] == block_id:
-                    block_start = i+len(block_id)
-                    break
-                # looking for block end
-            for i in range(block_start, len(text)):
-                if text[i] == '[':
-                    block_end = i-1
-                    break
-                block_end = i
-            return (block_start, block_end)
-
-        def find_source(text, BS, BE):
-            # finding source
-            for i in range(BS, BE):
-                if text[i:i+len("source")] == "source":
-                    source_start = i+len("source")+2
-                    for j in range(source_start, BE):
-                        if text[j] == '"':
-                            source_end = j
-                            break
-                    break
-            return text[source_start:source_end]
-
-        def find_output(text, BS, BE):
-            # finding output
-            for i in range(BS, BE):
-                if text[i:i+len("output")] == "output":
-                    output_start = i + len("output") + 2
-                    for j in range(output_start, BE):
-                        if text[j] == '"':
-                            output_end = j
-                            break
-                    break
-            return text[output_start:output_end]
-
-        # find source location and attach to object
-
-        text = import_config()
-        block_start, block_end = find_block(text, block_id)
-        self.import_file = find_source(text, block_start, block_end)
-        self.export_file = find_output(text, block_start, block_end)

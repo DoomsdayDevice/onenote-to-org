@@ -38,8 +38,3 @@ class Line:
         self.style = style
     def get_style(self):
         return self.style
-
-    @staticmethod
-    def ehh():
-        return 'laaaa'
-
