@@ -203,7 +203,8 @@ class Interpreter:
                 return list_of_sents
 
 
-        line.set_sentences(iterative_collect(line.get_par()))
+        # line.set_sentences(iterative_collect(line.get_par()))
+        line.set_sentences(recursive_collect(line.get_par()))
 
 
 

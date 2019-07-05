@@ -2,10 +2,11 @@ from .link import Link
 class Exporter:
     # takes the list of lines and prints them to a txt file
 
-    def __init__(self, the_list, filename):
-        self.the_list = the_list
+    def __init__(self, list_of_lines, filename):
+        self.list_of_lines = list_of_lines
         self.text = ""
-        for line in the_list:
+
+        for line in list_of_lines:
             self.print_line(line)
 
         self.export(filename)
@@ -33,6 +34,7 @@ class Exporter:
         # apply style
         put_style()
         for elem in line.get_sentences():
+            print(elem)
             if type(elem) == Link:
                 self.text += '[[' + elem.url + '][' + elem.description + ']]'
             else:

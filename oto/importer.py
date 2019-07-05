@@ -4,6 +4,7 @@ import os
 from oto import utils
 from oto.line import Line
 from oto.link import Link
+
 from oto.interpreter import Interpreter
 from oto.exporter import Exporter
 
@@ -29,7 +30,10 @@ class Importer:
             self.export_file = self.export_folder + filename
 
             self.list_of_lines = self.initial_cut(self.import_file)
-            self.send_stuff_further(self.list_of_lines, self.export_file)
+            # for line in self.list_of_lines:
+            #     print(line.paragraph)
+            Interpreter(self.list_of_lines)
+            Exporter(self.list_of_lines, self.export_file)
 
         # self.config()
         print("IMP:", self.import_file, " EXP:", self.export_file)
@@ -78,7 +82,7 @@ class Importer:
         else:
             new_list = list(os.walk(sys.argv[1]))[0]
             for i in new_list[2]:
-                list_of_paths.append(new_list[0]+ i)
+                list_of_paths.append(new_list[0] + i)
 
 
         # take the name of the file and append to export
@@ -103,12 +107,6 @@ class Importer:
             return filename[:-4] + "org"
         elif filename[-3:] == "htm":
             return filename[:-3] + "org"
-
-    @staticmethod
-    def send_stuff_further(list_of_lines, export_file):
-        Interpreter(list_of_lines)
-        Exporter(list_of_lines, export_file)
-
 
     def config(self):
         block_id = "[converter]"
