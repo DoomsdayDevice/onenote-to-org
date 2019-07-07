@@ -1,5 +1,7 @@
 def result_par(line):
     res = ''
+    res += '*' * (line.offset + 1)
+    res += ' '
     for sent in line.sentences:
         res += str(sent)
     return res + '\n'

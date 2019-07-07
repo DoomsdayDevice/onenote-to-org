@@ -1,7 +1,7 @@
 from oto.import_file import import_file
 from oto.parser import *
 from oto.convert_to_org import convert_to_org
-from oto.utils import filter_html
+from oto.utils import filter_html, map_hierarchy
 
 def convert_html_to_abstraction(source_file):
     list_of_lines = []
@@ -12,6 +12,8 @@ def convert_html_to_abstraction(source_file):
         PTagParser().feed(line.par, line)
         print("------PAR DONE -------")
         print("SENTENCES:", line.sentences)
+
+    map_hierarchy(list_of_lines)
 
     return list_of_lines
 
