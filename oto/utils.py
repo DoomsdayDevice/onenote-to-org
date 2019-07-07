@@ -7,3 +7,6 @@ def filter_html(text):
     new_text = new_text.replace('&apos;', "'")
 
     return new_text
+
+def map_hierarchy():
+    pass
