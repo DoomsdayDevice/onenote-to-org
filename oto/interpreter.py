@@ -12,7 +12,7 @@ class Interpreter:
         self.hierarchy_mapper()
 
         for line in self.list_of_lines:
-            self.parse(line)
+            self.parse_line(line)
 
     def hierarchy_mapper(self):
         """takes style margins, stores them if they're not already in the list,
@@ -35,13 +35,16 @@ class Interpreter:
             self.hierarchy_map.append(left_margin)
 
 
-    def parse(self, line):
-        # initial parsing that puts full style, img, <a>, tags inside their own strings
-        # takes a line, breaks it into sub-strings and attaches those to corresponding line objects
+    def parse_line(self, line):
+        """ initial parsing that puts full style, img, <a>, tags inside their own strings
+        takes a line, breaks it into sub-strings and attaches those to corresponding line objects
 
-        # iterate through the list, two vars: pointer and mode
-        # get the style first, then img if it exists, then text inside <p>
+        iterate through the list, two vars: pointer and mode
+        get the style first, then img if it exists, then text inside <p> """
+
         self.collect_style_pool(line)
+        line.set_par(self.remove_p_tags(line.get_par()))
+
         self.collect_img_pool(line)
         self.remove_nbsp(line)
 
@@ -50,21 +53,15 @@ class Interpreter:
 
 
     def collect_style_pool(self, line):
-        # loop for style; copy all style into its own string, cut the line at >
-        appending = False
-        style_pool = ""
-        for index, char in enumerate(line.get_par()):
-            if line.get_par()[index-7:index] == 'style="':
-                appending = True
-            if char == '"':
-                appending = False
-            if appending:
-                style_pool += char
-            if not appending and char == ">":
-                # removing the the <p> and </p> tags and what's inside, then breaking out of the loop
-                line.set_par(line.get_par()[index+1:-4])
-                break
-            line.set_style_pool(style_pool)
+        # loop for style; copy all style contents into their own string, cut the line at >
+        style_start = "style=\""
+        style_pool = utils.get_substr(line.get_par(), style_start, ['"'])
+
+        line.set_style_pool(style_pool)
+
+    @staticmethod
+    def remove_p_tags(paragraph):
+        return paragraph[paragraph.index('>')+1:-4]
 
     def collect_img_pool(self, line):
         #takes <img> contents, sends to checkbox analysis, removes from the paragraph
