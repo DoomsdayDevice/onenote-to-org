@@ -1,9 +1,9 @@
 import sys
 import os
 
-from oto import utils
-from oto.line import Line
-from oto.link import Link
+from . import utils
+from .line import Line
+from .link import Link
 
 class Importer:
     """ Imports the html file and removes everything but <p> tags

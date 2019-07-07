@@ -1,4 +1,4 @@
-from oto import divider
+# from oto import divider
 from oto.importer import Importer
 
 from oto.interpreter import Interpreter
@@ -8,7 +8,6 @@ from oto.config import read_config
 
 def main():
     config = read_config('./config')
-    assert false
     myImporter = Importer()
 
     # gets lines (p tags and other data) from each imported file

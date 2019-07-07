@@ -34,7 +34,6 @@ class Exporter:
         # apply style
         put_style()
         for elem in line.get_sentences():
-            print(elem)
             if type(elem) == Link:
                 self.text += '[[' + elem.url + '][' + elem.description + ']]'
             else:

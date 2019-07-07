@@ -2,10 +2,11 @@ import string
 from . import utils
 from .link import Link
 
+
 class Interpreter:
     def __init__(self, list_of_lines):
         # list of all the line objects
-        my_lines = []
+        # my_lines = []
         self.list_of_lines = list_of_lines
         self.hierarchy_map = ["0"]
         self.hierarchy_mapper()
@@ -14,32 +15,25 @@ class Interpreter:
             self.parse(line)
 
     def hierarchy_mapper(self):
-        # takes style margins, stores them if they're no already in the list, then sorts the resulting array
-        counter = 0
-        number = ""
+        """takes style margins, stores them if they're not already in the list,
+        then sorts the resulting array"""
+
         # shorthand
         mylist = self.list_of_lines
         for index, line in enumerate(mylist):
             # look for margin, then count to 3 and on 4th append the number
+            self.map_left_margin(line.get_par())
             #
-            for index, char in enumerate(line.get_par()):
-                if line.get_par()[index:index+7] == "MARGIN:":
-                    # now start counting numbers and when get to 4th - record it, if hit " or ; early - break
-                    for i in range(index, len(line.get_par())):
-
-                        if line.get_par()[i] in string.digits and (line.get_par()[i - 1] not in string.digits) and counter < 4:
-                            counter += 1
-                        if counter == 4 and (line.get_par()[i] in string.digits or line.get_par()[i] == "."):
-                            number += line.get_par()[i]
-                        if line.get_par()[i] in [';', '"']:
-                            if number not in self.hierarchy_map and number != "":
-                                self.hierarchy_map.append(number)
-                                number = ""
-                                counter = 0
-                            break
-                        # sorting the resulting map
+        # sorting the resulting map
         self.hierarchy_map.sort()
         print("the hierarchy map is:", self.hierarchy_map)
+
+    def map_left_margin(self, paragraph):
+        margins = utils.get_substr(paragraph, "MARGIN:", [';', '"'])
+        left_margin = utils.get_left_margin(margins)
+        if left_margin not in self.hierarchy_map and left_margin != "":
+            self.hierarchy_map.append(left_margin)
+
 
     def parse(self, line):
         # initial parsing that puts full style, img, <a>, tags inside their own strings
