@@ -27,7 +27,7 @@ class Exporter:
         if line.sentences and line.sentences[0]:
             for i in range(line.hierarchy+1):
                 self.text += '*'
-                self.text += ' '
+            self.text += ' '
 
         # UNFINISHED depending on checkbox value - put a todo value
 
@@ -39,7 +39,7 @@ class Exporter:
             else:
                 self.text += elem
                 put_style()
-                self.text += '\n'
+        self.text += '\n'
 
     def export(self, filename):
         with open(filename, 'w', encoding="utf_8") as fobj:
