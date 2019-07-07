@@ -25,6 +25,7 @@ class Line:
         return self.checkbox
 
     def set_sentences(self, the_list):
+        print("LIST OF STNCS:", the_list)
         self.sentences = the_list
     def get_sentences(self):
         return self.sentences

@@ -66,3 +66,26 @@ def get_left_margin(margins):
             number += char
     left_margin = number
     return left_margin
+
+def remove_substr(string, substr):
+    appending = False
+    counter = 0
+    result = ''
+    for i in range(len(string)):
+        if string[i:i+len(substr)] == substr:
+            appending = False
+            counter = len(substr)
+        if not appending and counter == 0:
+            appending = True
+        if counter > 0:
+            counter -= 1
+        if appending:
+            result += string[i]
+
+    return result
+
+def starts_with_link(par):
+    if par[0:2] == "<A":
+        return True
+    else:
+        return False

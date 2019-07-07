@@ -24,7 +24,7 @@ class Interpreter:
             # look for margin, then count to 3 and on 4th append the number
             self.map_left_margin(line.get_par())
             #
-        # sorting the resulting map
+            # sorting the resulting map
         self.hierarchy_map.sort()
         print("the hierarchy map is:", self.hierarchy_map)
 
@@ -64,41 +64,26 @@ class Interpreter:
         return paragraph[paragraph.index('>')+1:-4]
 
     def collect_img_pool(self, line):
-        #takes <img> contents, sends to checkbox analysis, removes from the paragraph
-        appending = False
-        img_pool = ""
-        index_pos = -1
-        for index, char in enumerate(line.get_par()):
-            if line.get_par()[index:index+4] == "<IMG":
-                appending = True
-            if appending:
-                img_pool += char
-                if char == ">": # if we hit the end of img
-                    appending = False
-                    index_pos = index
-                    break
-                # removing <img> from the paragraph
-        line.set_par(line.get_par()[index_pos+1:])
+        """takes <img> contents, sends to checkbox analysis
+        removes <img> tag from the paragraph"""
+        img_start = "<IMG"
+        img_pool = utils.get_substr(line.get_par(), img_start, ['>'])
+
+        if img_pool != '':
+            # removing <img> tag from the paragraph
+            par = line.get_par()
+            new_par = par[par.index('>')+1:]
+            line.set_par(new_par)
 
     def remove_nbsp(self, line):
-        # removes all line-objects whose paragraph is "nbsp"
-        # takes paragraph and removes all the instances of "&nbsp"
-        # !!! problem: multiple nbsps
-        # solution: remove it and move index back where started OR skip till after the thing
+        """ removes all line-objects whose paragraph is "nbsp"
+        takes paragraph and removes all the instances of "&nbsp"
+        TODO: problem when multiple nbsps
+        solution: remove it and move index back where started OR skip till after the thing """
+
         new_paragraph = ""
-        appending = True
         # counter skips symbols for &nbsp;
-        counter = 0
-        for i in range(len(line.get_par())):
-            if line.get_par()[i:i+6] =="&nbsp;":
-                appending = False
-                counter = 6
-            if not appending and counter == 0:
-                appending = True
-            if counter > 0:
-                counter -= 1
-            if appending:
-                new_paragraph += line.get_par()[i]
+        new_paragraph = utils.remove_substr(line.get_par(), "&npsp;")
 
         # removing newlines
         new_paragraph = new_paragraph.replace('\n  ', '')
@@ -106,76 +91,28 @@ class Interpreter:
 
 
     def collect_stncs(self, line):
-        # collects all sentences and linkspp
+        # collects all sentences and links
 
-        #uses recursion
-        def iterative_collect(paragraph):
-            # until there's something left -
-            new_paragraph = paragraph
-            list_of_sents = []
-            new_string = ''
-            cut_prematurely = False
-            while new_paragraph != '':
-                if new_paragraph[0:2] == "<A":
-                    for index, char in enumerate(new_paragraph):
-                        if new_paragraph[index-2:index] == "/A>":
-                            cut_prematurely = True
-                            index_pos = index
-                            break
-                        new_string += char
-                        # convert the string to a link object
-                    new_string = Link(new_string)
-                elif new_paragraph[0:5] == "<SPAN":
-                    # UNFINISHED, i haven't implemented bold yet
-                    # find > and append till </SPAN
-                    for i in range(len(new_paragraph)):
-                        if new_paragraph[i] == '>':
-                            for j in range(i+1, len(new_paragraph)):
-                                if new_paragraph[j] == '<':
-                                    break
-                                new_string += new_paragraph[j]
-                            break
-
-                    # find the end of </span> and cut it there
-                    for index, char in enumerate(new_paragraph):
-                        if new_paragraph[index-7:index] == "</SPAN>":
-                            cut_prematurely = True
-                            index_pos = index
-                            break
-
-                else:
-                    for index, char in enumerate(new_paragraph):
-                        if char == '<':
-                            cut_prematurely = True
-                            index_pos = index
-                            break
-                        new_string += char
-                        list_of_sents.append(new_string)
-                if cut_prematurely:
-                    new_string = ''
-                    cut_prematurely = False
-                    new_paragraph = new_paragraph[index_pos:]
-                else:
-                    new_paragraph = ''
-            return list_of_sents
+        # uses recursion
+        def iterative_collect(par):
+            pass
 
         def recursive_collect(paragraph):
             # new string that will be added to the list of sents along with others
             new_string = ""
-            # checks if link or not
-            # adds the pool to a link object
             cut_prematurely = False
-            if paragraph[0:2] == "<A":
-                for index, char in enumerate(paragraph):
-                    if paragraph[index-2:index] == "/A>":
-                        cut_prematurely = True
-                        break
-                    new_string += char
-                    # convert the string to a link object
+            if utils.starts_with_link(paragraph): # if paragraph stats with a link
+                end_of_link = paragraph.index("/A>") + 3 + 1
+                new_string = paragraph[:end_of_link]
+                index = end_of_link
+
                 new_string = Link(new_string)
-            else:
+
+                if end_of_link != len(paragraph):
+                    cut_prematurely = True
+            else: # if it's just text
                 for index, char in enumerate(paragraph):
-                    if char == "<":
+                    if char == "<": # if stumble upon another tag
                         cut_prematurely = True
                         break
                     new_string += char
@@ -196,12 +133,6 @@ class Interpreter:
 
         # line.set_sentences(iterative_collect(line.get_par()))
         line.set_sentences(recursive_collect(line.get_par()))
-
-
-
-
-
-
 
     # final parses
     def style_parse(self, line):
@@ -267,16 +198,4 @@ class Interpreter:
 
         # loop for img; impossible to ID right now, because the image name is diff every time
         # gotta analyze the image itself
-
-        # checkbox_id = "mht97B(1).tmp"
-        # for index, char in enumerate(line.get_par()):
-        #     if line.get_par()[index:index+4] == "<IMG":
-        #         line.set_checkbox("unchecked")
-        #         for i in range(index, len(line.get_par())):
-        #             if line.get_par()[i:i+len(checkbox_id)+1] == checkbox_id:
-        #                 line.set_checkbox("checked")
-        #                 break
-        #             print(line.get_par()[i:i+len(checkbox_id)+1])
-        #         break
-        # print(line.get_checkbox())
         pass
