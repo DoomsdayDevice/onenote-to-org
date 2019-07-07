@@ -1,24 +1,26 @@
-# from oto import divider
-from oto.importer import Importer
-
-from oto.interpreter import Interpreter
-from oto.exporter import Exporter
-from oto.config import read_config
+from oto.import_file import import_file
+from oto.parser import MyHTMLParser
+from oto.convert_to_org import convert_to_org
+from oto.utils import filter_html
 
 
 def main():
-    config = read_config('./config')
-    myImporter = Importer()
+    parser = MyHTMLParser()
+    source_file = import_file()
+    source_file = filter_html(source_file)
 
-    # gets lines (p tags and other data) from each imported file
-    # passes it to Interpreter to parse and change each line
-    # and then to Exporter to print that line
-    for imported_file in myImporter.get_files():
-        Interpreter(imported_file)
-        Exporter(imported_file, myImporter.export_filename)
+
+    # convert html into python abstraction
+    list_of_lines = []
+    parser.feed(source_file, list_of_lines) # mutates list_of_lines
+
+    # convert python abstraction into org-mode format
+    org_text = convert_to_org(list_of_lines)
+
+    with open('output/oto-result.org', 'w', encoding='utf-8') as fobj:
+        print(org_text, file=fobj)
 
     print("Success!")
-
 
 if __name__ == "__main__":
     main()
