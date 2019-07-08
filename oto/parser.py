@@ -15,14 +15,16 @@ class InitialHTMLParser(HTMLParser):
         HTMLParser.feed(self, html)
 
     def handle_starttag(self, tag, attrs):
+        print("Encountered a start tag:", tag)
         if tag == 'p':
-            print("Encountered a start tag:", tag)
+            print("Encountered P tag:", tag)
             self.curr_p_start = self.getpos()[1]
 
             self.list_of_lines.append(Line())
-        # print("It has some attrs:", attrs)
+            # print("It has some attrs:", attrs)
 
     def handle_endtag(self, tag):
+        print("Encountered an end tag:", tag)
         if tag == 'p':
             print("Encountered an end tag:", tag)
             self.curr_p_end = self.getpos()[1]
@@ -31,6 +33,11 @@ class InitialHTMLParser(HTMLParser):
             end = self.curr_p_end + len('</P>')
             self.list_of_lines[self.currentLine].par = self.text[start:end]
             self.currentLine += 1
+    def handle_data(self, data):
+        print("Encountered some data:", data)
+
+    def handle_entityref(self, name):
+        print("ENC ENTITY REF:", name)
 
 
 class PTagParser(HTMLParser):
@@ -46,15 +53,18 @@ class PTagParser(HTMLParser):
             self.current_tag = 'a'
             self.current_link = Link()
             self.current_link.href = attrs[0][1]
+        elif tag == 'span':
+            # ignored for now and just appended to previous
+            pass
 
-        self.current_tag = tag
+        # self.current_tag = tag
 
     def handle_endtag(self, tag):
         pass
 
     def handle_data(self, data):
         if self.current_tag == 'a':
-            self.current_link.text = data
+            self.current_link.text += data
             self.line.sentences.append(self.current_link)
         else:
             self.line.sentences.append(data)

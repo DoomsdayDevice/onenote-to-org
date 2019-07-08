@@ -1,3 +1,3 @@
-def import_file():
-    with open('input/General.htm', 'r') as fobj:
-        return fobj.read() 
+def import_file(filename):
+    with open(filename, 'r') as fobj:
+        return fobj.read()
